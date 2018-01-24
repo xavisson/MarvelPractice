@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 
-public class Comic implements Serializable {
+public class ComicQuery implements Serializable {
 
     @SerializedName("code")
     @Expose

@@ -12,10 +12,9 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.xavisson.marvelpractice.BuildConfig;
 import com.xavisson.marvelpractice.R;
-import com.xavisson.marvelpractice.model.Comic;
+import com.xavisson.marvelpractice.model.ComicQuery;
 import com.xavisson.marvelpractice.model.Result;
 import com.xavisson.marvelpractice.net.MarvelApi;
 import com.xavisson.marvelpractice.net.RetrofitInstance;
@@ -49,10 +48,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initViews();
 
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.setDateFormat("M/d/yy hh:mm a");
-        gson = gsonBuilder.create();
-
         getComics();
     }
 
@@ -72,16 +67,16 @@ public class MainActivity extends AppCompatActivity {
 
         MarvelApi marvelApi = RetrofitInstance.getRetrofitInstance().create(MarvelApi.class);
 
-        Call<Comic> call = marvelApi.getComics(order, publicAPIKey, hash, ts);
-        call.enqueue(new Callback<Comic>() {
+        Call<ComicQuery> call = marvelApi.getComics(order, publicAPIKey, hash, ts);
+        call.enqueue(new Callback<ComicQuery>() {
             @Override
-            public void onResponse(Call<Comic> call, Response<Comic> response) {
+            public void onResponse(Call<ComicQuery> call, Response<ComicQuery> response) {
                 resultList = response.body().getData().getResults();
                 displayComics();
             }
 
             @Override
-            public void onFailure(Call<Comic> call, Throwable t) {
+            public void onFailure(Call<ComicQuery> call, Throwable t) {
                 Toast.makeText(MainActivity.this, getString(R.string.something_wrong),
                         Toast.LENGTH_SHORT).show();
                 Log.e(LOG_TAG, "Couldn't retrieve comics: " + t.getCause());

@@ -1,7 +1,7 @@
 package com.xavisson.marvelpractice.net;
 
 import com.xavisson.marvelpractice.BuildConfig;
-import com.xavisson.marvelpractice.model.Comic;
+import com.xavisson.marvelpractice.model.ComicQuery;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -21,7 +21,7 @@ public interface MarvelApi {
     String ORDER = "orderBy";
 
     @GET(COMICS_FROM_CHARACTER_ID)
-    Call<Comic> getComics(
+    Call<ComicQuery> getComics(
             @Query(ORDER) String order,
             @Query(API_KEY) String publicKey,
             @Query(HASH) String hash,
