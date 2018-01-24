@@ -3,4 +3,5 @@
     <string name="storyline">Storyline</string>
     <string name="release_date">Release date</string>
     <string name="price">Price</string>
+    <string name="something_wrong">Something went wrong!</string>
 </resources>

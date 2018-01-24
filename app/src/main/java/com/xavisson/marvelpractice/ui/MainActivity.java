@@ -7,18 +7,27 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.xavisson.marvelpractice.BuildConfig;
 import com.xavisson.marvelpractice.R;
 import com.xavisson.marvelpractice.model.Comic;
 import com.xavisson.marvelpractice.model.Result;
-import com.xavisson.marvelpractice.net.FetchComicsTask;
+import com.xavisson.marvelpractice.net.MarvelApi;
+import com.xavisson.marvelpractice.net.RetrofitInstance;
 import com.xavisson.marvelpractice.ui.adapter.ComicsAdapter;
+import com.xavisson.marvelpractice.utilities.Tools;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -28,7 +37,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int COLUMN_NUMBER_PORTRAIT = 2;
     private static final int COLUMN_NUMBER_LANDSCAPE = 3;
 
-    private Comic comicQueryResult = new Comic();
     private List<Result> resultList = new ArrayList<>();
     private RecyclerView comicsRecycler;
     private ComicsAdapter comicsAdapter;
@@ -45,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         gsonBuilder.setDateFormat("M/d/yy hh:mm a");
         gson = gsonBuilder.create();
 
-        getPopularComics();
+        getComics();
     }
 
     private void initViews() {
@@ -54,26 +62,34 @@ public class MainActivity extends AppCompatActivity {
         comicsRecycler.setLayoutManager(new LinearLayoutManager(this));
     }
 
-    private void getPopularComics() {
+    private void getComics() {
 
-        String sortBy = "popular";
-        new FetchComicsTask(new FetchComicsTask.AsyncComicsResponse() {
+        String publicAPIKey = BuildConfig.MARVEL_PUBLIC_KEY;
+        String privateAPIKey = BuildConfig.MARVEL_PRIVATE_KEY;
+        String ts = Long.toString(System.currentTimeMillis() / 1000);
+        String hash = Tools.md5(ts + privateAPIKey + publicAPIKey);
+        String order = "title";
+
+        MarvelApi marvelApi = RetrofitInstance.getRetrofitInstance().create(MarvelApi.class);
+
+        Call<Comic> call = marvelApi.getComics(order, publicAPIKey, hash, ts);
+        call.enqueue(new Callback<Comic>() {
             @Override
-            public void taskPostExecute(String moviesData) {
-                listComics(moviesData);
+            public void onResponse(Call<Comic> call, Response<Comic> response) {
+                resultList = response.body().getData().getResults();
+                displayComics();
             }
-        }).execute(sortBy);
-    }
 
-    public void listComics(String comicsData) {
-
-        comicQueryResult = gson.fromJson(comicsData, Comic.class);
-        resultList = comicQueryResult.getData().getResults();
-        displayComics();
+            @Override
+            public void onFailure(Call<Comic> call, Throwable t) {
+                Toast.makeText(MainActivity.this, getString(R.string.something_wrong),
+                        Toast.LENGTH_SHORT).show();
+                Log.e(LOG_TAG, "Couldn't retrieve comics: " + t.getCause());
+            }
+        });
     }
 
     private void displayComics() {
-
         initRecycler();
         comicsAdapter.notifyDataSetChanged();
     }
