@@ -11,13 +11,14 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
 import com.xavisson.marvelpractice.BuildConfig;
 import com.xavisson.marvelpractice.R;
+import com.xavisson.marvelpractice.component.DaggerMarvelApiComponent;
+import com.xavisson.marvelpractice.component.MarvelApiComponent;
 import com.xavisson.marvelpractice.model.ComicQuery;
 import com.xavisson.marvelpractice.model.Result;
+import com.xavisson.marvelpractice.module.ContextModule;
 import com.xavisson.marvelpractice.net.MarvelApi;
-import com.xavisson.marvelpractice.net.RetrofitInstance;
 import com.xavisson.marvelpractice.ui.adapter.ComicsAdapter;
 import com.xavisson.marvelpractice.utilities.Tools;
 
@@ -40,14 +41,14 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView comicsRecycler;
     private ComicsAdapter comicsAdapter;
 
-    private Gson gson;
+    private MarvelApi marvelApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initViews();
-
+        initComponents();
         getComics();
     }
 
@@ -57,6 +58,14 @@ public class MainActivity extends AppCompatActivity {
         comicsRecycler.setLayoutManager(new LinearLayoutManager(this));
     }
 
+    private void initComponents() {
+
+        MarvelApiComponent daggerMarvelApiComponent = DaggerMarvelApiComponent.builder()
+                .contextModule(new ContextModule(this))
+                .build();
+        marvelApi = daggerMarvelApiComponent.getMarvelApi();
+    }
+
     private void getComics() {
 
         String publicAPIKey = BuildConfig.MARVEL_PUBLIC_KEY;
@@ -64,8 +73,6 @@ public class MainActivity extends AppCompatActivity {
         String ts = Long.toString(System.currentTimeMillis() / 1000);
         String hash = Tools.md5(ts + privateAPIKey + publicAPIKey);
         String order = "title";
-
-        MarvelApi marvelApi = RetrofitInstance.getRetrofitInstance().create(MarvelApi.class);
 
         Call<ComicQuery> call = marvelApi.getComics(order, publicAPIKey, hash, ts);
         call.enqueue(new Callback<ComicQuery>() {
@@ -94,12 +101,10 @@ public class MainActivity extends AppCompatActivity {
         comicsAdapter = new ComicsAdapter(MainActivity.this, resultList);
         RecyclerView.LayoutManager layoutManager;
 
-        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
+        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
             layoutManager = new GridLayoutManager(getApplicationContext(), COLUMN_NUMBER_PORTRAIT);
-        }
-        else{
+        else
             layoutManager = new GridLayoutManager(getApplicationContext(), COLUMN_NUMBER_LANDSCAPE);
-        }
 
         comicsRecycler.setLayoutManager(layoutManager);
         comicsRecycler.setHasFixedSize(true);
